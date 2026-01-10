@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
+import CreateDrop from "./CreateDrop";
 import {
   ShieldLoading,
   TriangleFlagTwoStripes,
@@ -13,6 +14,7 @@ import {
   ZSquare,
   FingerprintXmarkCircle,
   CheckCircleSolid,
+  Plus,
 } from "iconoir-react";
 
 const socket = io("http://localhost:4000");
@@ -28,6 +30,7 @@ const App = () => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [reservationExpired, setReservationExpired] = useState(false);
   const [reservationExpiryTimer, setReservationExpiryTimer] = useState(null);
+  const [showCreateDropModal, setShowCreateDropModal] = useState(false);
 
   useEffect(() => {
     fetchDrops();
@@ -70,7 +73,6 @@ const App = () => {
         if (timeLeft <= 0) {
           setReservationExpired(true);
           setCountdown("EXPIRED");
-          // Don't show error toast here - let purchase handle it
           fetchDrops();
         } else {
           const minutes = Math.floor(timeLeft / (1000 * 60));
@@ -90,7 +92,7 @@ const App = () => {
         setReservation(null);
         setReservationExpired(false);
         setCountdown(null);
-      }, 60000); // 1 minute = 60000ms
+      }, 60000);
 
       setReservationExpiryTimer(timer);
 
@@ -166,40 +168,54 @@ const App = () => {
     }
   };
 
+  const handleDropCreated = (newDrop) => {
+    fetchDrops(); // Refresh the drops list
+    // Toast is already shown in the CreateDrop component
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* ------------ Header ------------- */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900">
               Real-time Inventory System
             </h1>
-            <div
-              className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${
-                socketConnected
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-              }`}
-            >
-              {socketConnected ? (
-                <>
-                  <CheckCircleSolid className="w-4 h-4" />
-                  Connected
-                </>
-              ) : (
-                <>
-                  <FingerprintXmarkCircle className="w-4 h-4" />
-                  Disconnected
-                </>
-              )}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowCreateDropModal(true)}
+                className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                title="Create New Drop"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+              <div
+                className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${
+                  socketConnected
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {socketConnected ? (
+                  <>
+                    <CheckCircleSolid className="w-4 h-4" />
+                    Connected
+                  </>
+                ) : (
+                  <>
+                    <FingerprintXmarkCircle className="w-4 h-4" />
+                    Disconnected
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Reservation Section - Prominently displayed at top when active */}
+        {/* ------------ Reservation Section - Prominently displayed at top when active ------ */}
         {reservation && (
           <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between">
@@ -253,7 +269,7 @@ const App = () => {
           </div>
         )}
 
-        {/* Items Grid */}
+        {/* ----------- Items Grid ----------- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {drops.map((drop) => (
             <div key={drop.id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 border border-gray-100">
@@ -276,7 +292,7 @@ const App = () => {
                 </div>
               </div>
 
-              {/* Activity Feed */}
+              {/* ------------ Activity Feed ----------- */}
               {drop.recentPurchases && drop.recentPurchases.length > 0 && (
                 <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                   <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -323,7 +339,7 @@ const App = () => {
           ))}
         </div>
 
-        {/* Empty State */}
+        {/* ----------- Empty State --------- */}
         {drops.length === 0 && (
           <div className="text-center py-12">
             <Packages className="w-24 h-24 mx-auto mb-4 text-gray-400" />
@@ -333,7 +349,7 @@ const App = () => {
         )}
       </div>
 
-      {/* Toast Notification */}
+      {/* ------------ Toast Notification ---------- */}
       {toast && (
         <div
           className={`fixed top-6 right-6 px-6 py-3 rounded-lg shadow-xl text-white z-50 text-sm font-medium ${
@@ -343,6 +359,13 @@ const App = () => {
           {toast.message}
         </div>
       )}
+
+      {/* ------------ Create Drop Modal ---------- */}
+      <CreateDrop
+        isOpen={showCreateDropModal}
+        onClose={() => setShowCreateDropModal(false)}
+        onDropCreated={handleDropCreated}
+      />
     </div>
   );
 };
