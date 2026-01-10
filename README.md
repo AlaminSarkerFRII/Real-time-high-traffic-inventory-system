@@ -20,12 +20,32 @@ A Node.js backend for managing limited edition sneaker drops with real-time stoc
 
 ## Setup
 
-### Prerequisites
+### Option 1: Docker (Recommended for Easy Setup)
+
+1. Clone the repository:
+   ```bash
+   git clone git@github.com:AlaminSarkerFRII/Real-time-high-traffic-inventory-system.git
+   cd Real-time-high-traffic-inventory-system
+   ```
+
+2. **Run with Docker:**
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Access the application:**
+   - Frontend: `http://localhost:5173`
+   - Backend API: `http://localhost:4000`
+   - Database: `localhost:5432` (accessible from host)
+
+### Option 2: Manual Setup
+
+#### Prerequisites
 
 - Node.js (v16+)
 - PostgreSQL database (Neon recommended)
 
-### Installation
+#### Installation
 
 1. Clone the repository:
    ```bash
