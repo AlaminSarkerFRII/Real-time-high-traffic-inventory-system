@@ -27,24 +27,37 @@ A Node.js backend for managing limited edition sneaker drops with real-time stoc
 
 ### Installation
 
-1. Clone the repository
-2. Navigate to backend directory:
+1. Clone the repository:
+   ```bash
+   git clone git@github.com:AlaminSarkerFRII/Real-time-high-traffic-inventory-system.git
+   cd Real-time-high-traffic-inventory-system
+   ```
+
+2. **Setup Backend:**
    ```bash
    cd backend
-   ```
-3. Install dependencies:
-   ```bash
    npm install
    ```
-4. Configure environment variables in `.env`:
+   Configure `.env` file:
    ```
    DATABASE_URL="postgresql://username:password@host:port/database?sslmode=require"
    PORT=4000
    ```
-5. Start the server:
+   Start backend server:
    ```bash
    npm start
    ```
+
+3. **Setup Frontend (in new terminal):**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+4. **Access the application:**
+   - Frontend: `http://localhost:5173`
+   - Backend API: `http://localhost:4000`
 
 ## API Endpoints
 
