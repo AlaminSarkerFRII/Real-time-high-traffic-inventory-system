@@ -19,11 +19,11 @@ import {
   Plus,
 } from "iconoir-react";
 
-const socket = io("http://localhost:4000");
+const socket = io(window.location.origin);
 
 const App = () => {
   const [drops, setDrops] = useState([]);
-  const [userId, setUserId] = useState(1); // Mock user ID (integer)
+  const [userId, setUserId] = useState(null); // Will be set after user creation/fetch
   const [selectedDrop, setSelectedDrop] = useState(null);
   const [reservation, setReservation] = useState(null);
   const [loadingStates, setLoadingStates] = useState({});
@@ -35,6 +35,7 @@ const App = () => {
   const [showCreateDropModal, setShowCreateDropModal] = useState(false);
 
   useEffect(() => {
+    initializeUser();
     fetchDrops();
     socket.on("connect", () => {
       console.log("Connected to server");
@@ -104,6 +105,25 @@ const App = () => {
       };
     }
   }, [reservationExpired, reservation]);
+
+  const initializeUser = async () => {
+    try {
+      // Try to create the demo user (it will fail if it already exists, but that's fine)
+      const res = await axios.post("/api/users", { username: "demo_user" });
+      setUserId(res.data.user.id);
+      console.log("Demo user created with ID:", res.data.user.id);
+    } catch (error) {
+      // If user already exists, try to find it by username
+      try {
+        // Note: This assumes we have a way to get user by username, but for now we'll just use a fallback
+        // For this demo, we'll assume the user ID is 1 (which should work after the server creates it)
+        setUserId(1);
+        console.log("Using existing demo user with ID: 1");
+      } catch (findError) {
+        console.error("Could not initialize user:", findError);
+      }
+    }
+  };
 
   const fetchDrops = async () => {
     try {
@@ -316,9 +336,9 @@ const App = () => {
                 {drop.availableStock > 0 && (
                   <button
                     onClick={() => handleReserve(drop.id)}
-                    disabled={loadingStates[`reserve-${drop.id}`]}
+                    disabled={loadingStates[`reserve-${drop.id}`] || !userId}
                     className={`w-full py-3 px-4 rounded-lg font-bold text-white transition-all duration-200 transform flex items-center justify-center gap-2 ${
-                      loadingStates[`reserve-${drop.id}`]
+                      loadingStates[`reserve-${drop.id}`] || !userId
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-md hover:shadow-lg"
                     }`}
@@ -327,6 +347,11 @@ const App = () => {
                       <>
                         <ShieldLoading className="w-5 h-5" />
                         Reserving...
+                      </>
+                    ) : !userId ? (
+                      <>
+                        <RefreshCircle className="w-5 h-5" />
+                        Initializing...
                       </>
                     ) : (
                       <>

@@ -16,24 +16,43 @@ const io = initializeSocket(server);
 
 (async () => {
   try {
-    console.log("⏳ Connecting to Neon PostgreSQL...");
+    console.log("Connecting to Neon PostgreSQL...");
 
     await sequelize.authenticate();
-    console.log("✅ Connected to Neon PostgreSQL");
+    console.log("Connected to Neon PostgreSQL");
 
     await sequelize.sync({ alter: true });
-    console.log("✅ Database synced");
+    console.log("Database synced");
+
+    // Create a default user for demo purposes
+    const { User } = require("./src/models");
+    try {
+      const [defaultUser, created] = await User.findOrCreate({
+        where: { username: "demo_user" },
+        defaults: { username: "demo_user" },
+      });
+      if (created) {
+        console.log("Default user created with ID:", defaultUser.id);
+      } else {
+        console.log(" Default user already exists with ID:", defaultUser.id);
+      }
+    } catch (error) {
+      console.log("Could not create default user:", error.message);
+    }
 
     // Start the expiration service
     startExpirationService(io);
 
-    server.listen(PORT, () =>
-      console.log(`🚀 Server running on port ${PORT}`)
-    );
+    server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   } catch (error) {
-    console.error("❌ Connection error:", error);
-    console.log("💡 Make sure your Neon database credentials are correct and the database exists");
-    console.log("💡 Current DATABASE_URL:", process.env.DATABASE_URL ? "Set" : "Not set");
+    console.error(" Connection error:", error);
+    console.log(
+      " Make sure your Neon database credentials are correct and the database exists"
+    );
+    console.log(
+      " Current DATABASE_URL:",
+      process.env.DATABASE_URL ? "Set" : "Not set"
+    );
     process.exit(1);
   }
 })();
