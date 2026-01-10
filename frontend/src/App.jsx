@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import CreateDrop from "./CreateDrop";
 import {
   ShieldLoading,
@@ -25,7 +27,7 @@ const App = () => {
   const [selectedDrop, setSelectedDrop] = useState(null);
   const [reservation, setReservation] = useState(null);
   const [loadingStates, setLoadingStates] = useState({});
-  const [toast, setToast] = useState(null);
+
   const [countdown, setCountdown] = useState(null);
   const [socketConnected, setSocketConnected] = useState(false);
   const [reservationExpired, setReservationExpired] = useState(false);
@@ -112,11 +114,6 @@ const App = () => {
     }
   };
 
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
   // Check if reservation expired on mount (in case of page refresh)
   useEffect(() => {
     if (reservation) {
@@ -124,7 +121,7 @@ const App = () => {
       const expiresAt = new Date(reservation.expires_at).getTime();
       if (now >= expiresAt) {
         setReservation(null);
-        showToast("Reservation expired!", "error");
+        toast.error("Reservation expired!");
       }
     }
   }, []);
@@ -140,10 +137,10 @@ const App = () => {
       setReservation(res.data.reservation);
       setReservationExpired(false); // Reset expired state for new reservation
       setCountdown(null); // Reset countdown
-      showToast("Reservation successful!", "success");
+      toast.success("Reservation successful!");
       fetchDrops();
     } catch (error) {
-      showToast("Reservation failed: " + error.response?.data?.error, "error");
+      toast.error("Reservation failed: " + error.response?.data?.error);
     } finally {
       setLoading(`reserve-${dropId}`, false);
     }
@@ -156,13 +153,13 @@ const App = () => {
       const res = await axios.post(`/api/purchase/${reservation.id}`, {
         userId,
       });
-      showToast("Purchase successful!", "success");
+      toast.success("Purchase successful!");
       setReservation(null);
       setReservationExpired(false);
       setCountdown(null);
       fetchDrops();
     } catch (error) {
-      showToast("Purchase failed: " + error.response?.data?.error, "error");
+      toast.error("Purchase failed: " + error.response?.data?.error);
     } finally {
       setLoading("purchase", false);
     }
@@ -272,69 +269,74 @@ const App = () => {
         {/* ----------- Items Grid ----------- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {drops.map((drop) => (
-            <div key={drop.id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{drop.name}</h3>
-              <p className="text-gray-600 mb-3">Price: <span className="font-semibold text-lg">${drop.price}</span></p>
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">Available Stock:</span>
-                  <span className={`text-lg font-bold ${
-                    drop.availableStock > 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {drop.availableStock}/{drop.totalStock}
-                  </span>
+            <div key={drop.id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 border border-gray-100 flex flex-col h-full">
+              <div className="flex-grow">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{drop.name}</h3>
+                <p className="text-gray-600 mb-3">Price: <span className="font-semibold text-lg">${drop.price}</span></p>
+                <div className="mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700">Available Stock:</span>
+                    <span className={`text-lg font-bold ${
+                      drop.availableStock > 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {drop.availableStock}/{drop.totalStock}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(drop.availableStock / drop.totalStock) * 100}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(drop.availableStock / drop.totalStock) * 100}%` }}
-                  ></div>
-                </div>
+
+                {/* ------------ Activity Feed ----------- */}
+                {drop.recentPurchases && drop.recentPurchases.length > 0 && (
+                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <ShoppingBagCheck className="w-4 h-4" />
+                      Recent Purchases:
+                    </h4>
+                    <ul className="text-sm text-gray-600 space-y-1 max-h-20 overflow-y-auto">
+                      {drop.recentPurchases.slice(0, 3).map((purchase, index) => (
+                        <li key={index} className="flex justify-between text-xs">
+                          <span className="font-medium">{purchase.username}</span>
+                          <span className="text-gray-500">
+                            {new Date(purchase.timestamp).toLocaleTimeString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
 
-              {/* ------------ Activity Feed ----------- */}
-              {drop.recentPurchases && drop.recentPurchases.length > 0 && (
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                    <ShoppingBagCheck className="w-4 h-4" />
-                    Recent Purchases:
-                  </h4>
-                  <ul className="text-sm text-gray-600 space-y-1 max-h-20 overflow-y-auto">
-                    {drop.recentPurchases.slice(0, 3).map((purchase, index) => (
-                      <li key={index} className="flex justify-between text-xs">
-                        <span className="font-medium">{purchase.username}</span>
-                        <span className="text-gray-500">
-                          {new Date(purchase.timestamp).toLocaleTimeString()}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {drop.availableStock > 0 && (
-                <button
-                  onClick={() => handleReserve(drop.id)}
-                  disabled={loadingStates[`reserve-${drop.id}`]}
-                  className={`w-full py-3 px-4 rounded-lg font-bold text-white transition-all duration-200 transform flex items-center justify-center gap-2 ${
-                    loadingStates[`reserve-${drop.id}`]
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-md hover:shadow-lg"
-                  }`}
-                >
-                  {loadingStates[`reserve-${drop.id}`] ? (
-                    <>
-                      <ShieldLoading className="w-5 h-5" />
-                      Reserving...
-                    </>
-                  ) : (
-                    <>
-                      <TriangleFlagTwoStripes className="w-5 h-5" />
-                      Reserve
-                    </>
-                  )}
-                </button>
-              )}
+              {/* Reserve Button - Always at bottom */}
+              <div className="mt-auto">
+                {drop.availableStock > 0 && (
+                  <button
+                    onClick={() => handleReserve(drop.id)}
+                    disabled={loadingStates[`reserve-${drop.id}`]}
+                    className={`w-full py-3 px-4 rounded-lg font-bold text-white transition-all duration-200 transform flex items-center justify-center gap-2 ${
+                      loadingStates[`reserve-${drop.id}`]
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-md hover:shadow-lg"
+                    }`}
+                  >
+                    {loadingStates[`reserve-${drop.id}`] ? (
+                      <>
+                        <ShieldLoading className="w-5 h-5" />
+                        Reserving...
+                      </>
+                    ) : (
+                      <>
+                        <TriangleFlagTwoStripes className="w-5 h-5" />
+                        Reserve
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -349,22 +351,24 @@ const App = () => {
         )}
       </div>
 
-      {/* ------------ Toast Notification ---------- */}
-      {toast && (
-        <div
-          className={`fixed top-6 right-6 px-6 py-3 rounded-lg shadow-xl text-white z-50 text-sm font-medium ${
-            toast.type === "error" ? "bg-red-500" : "bg-green-500"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
-
       {/* ------------ Create Drop Modal ---------- */}
       <CreateDrop
         isOpen={showCreateDropModal}
         onClose={() => setShowCreateDropModal(false)}
         onDropCreated={handleDropCreated}
+      />
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import {
   X,
   Packages,
@@ -8,8 +9,6 @@ import {
   CalendarCheck,
   RefreshCircleSolid,
   SineWave,
-  ShieldAlert,
-  CheckCircleSolid,
   Dollar,
 } from "iconoir-react";
 
@@ -22,7 +21,6 @@ const CreateDrop = ({ isOpen, onClose, onDropCreated }) => {
   });
   const [loading, setLoading] = useState(false);
   const [existingDrops, setExistingDrops] = useState([]);
-  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -47,25 +45,20 @@ const CreateDrop = ({ isOpen, onClose, onDropCreated }) => {
     }));
   };
 
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validation
     if (!formData.name.trim()) {
-      showToast("Drop name is required", "error");
+      toast.error("Drop name is required");
       return;
     }
     if (!formData.price || isNaN(formData.price) || parseFloat(formData.price) <= 0) {
-      showToast("Valid price is required", "error");
+      toast.error("Valid price is required");
       return;
     }
     if (!formData.totalStock || isNaN(formData.totalStock) || parseInt(formData.totalStock) <= 0) {
-      showToast("Valid total stock is required", "error");
+      toast.error("Valid total stock is required");
       return;
     }
 
@@ -80,9 +73,8 @@ const CreateDrop = ({ isOpen, onClose, onDropCreated }) => {
 
       const res = await axios.post("/api/drops", payload);
 
-      showToast("Drop created successfully!", "success");
+      toast.success("Drop created successfully!");
 
-      // Reset form
       setFormData({
         name: "",
         price: "",
@@ -90,21 +82,21 @@ const CreateDrop = ({ isOpen, onClose, onDropCreated }) => {
         dropStartTime: "",
       });
 
-      // Refresh existing drops
+      // Refresh 
       fetchExistingDrops();
 
-      // Notify parent component
+      // Notify
       if (onDropCreated) {
         onDropCreated(res.data.drop);
       }
 
-      // Close modal after a short delay
+      // Close modal
       setTimeout(() => {
         onClose();
       }, 1500);
 
     } catch (error) {
-      showToast("Failed to create drop: " + (error.response?.data?.error || error.message), "error");
+      toast.error("Failed to create drop: " + (error.response?.data?.error || error.message));
     } finally {
       setLoading(false);
     }
@@ -303,22 +295,6 @@ const CreateDrop = ({ isOpen, onClose, onDropCreated }) => {
           </div>
         </div>
       </div>
-
-      {/* Toast Notification */}
-      {toast && (
-        <div
-          className={`fixed top-6 right-6 px-6 py-3 rounded-lg shadow-xl text-white z-50 text-sm font-medium flex items-center gap-2 ${
-            toast.type === "error" ? "bg-red-500" : "bg-green-500"
-          }`}
-        >
-          {toast.type === "error" ? (
-            <ShieldAlert className="w-4 h-4" />
-          ) : (
-            <CheckCircleSolid className="w-4 h-4" />
-          )}
-          {toast.message}
-        </div>
-      )}
     </div>
   );
 };
