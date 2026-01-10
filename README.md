@@ -32,6 +32,7 @@ A Node.js backend for managing limited edition sneaker drops with real-time stoc
    git clone git@github.com:AlaminSarkerFRII/Real-time-high-traffic-inventory-system.git
    cd Real-time-high-traffic-inventory-system
    ```
+   **Default branch:** `main`
 
 2. **Setup Backend:**
    ```bash
