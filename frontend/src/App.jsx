@@ -1,6 +1,19 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
+import {
+  ShieldLoading,
+  TriangleFlagTwoStripes,
+  Packages,
+  ShoppingBagCheck,
+  RefreshCircle,
+  XmarkCircleSolid,
+  CreditCardSolid,
+  TimerSolid,
+  ZSquare,
+  FingerprintXmarkCircle,
+  CheckCircleSolid,
+} from "iconoir-react";
 
 const socket = io("http://localhost:4000");
 
@@ -14,6 +27,7 @@ const App = () => {
   const [countdown, setCountdown] = useState(null);
   const [socketConnected, setSocketConnected] = useState(false);
   const [reservationExpired, setReservationExpired] = useState(false);
+  const [reservationExpiryTimer, setReservationExpiryTimer] = useState(null);
 
   useEffect(() => {
     fetchDrops();
@@ -68,6 +82,24 @@ const App = () => {
       return () => clearInterval(interval);
     }
   }, [reservation, reservationExpired]);
+
+  // Auto-hide expired reservation after 1 minute
+  useEffect(() => {
+    if (reservationExpired && reservation) {
+      const timer = setTimeout(() => {
+        setReservation(null);
+        setReservationExpired(false);
+        setCountdown(null);
+      }, 60000); // 1 minute = 60000ms
+
+      setReservationExpiryTimer(timer);
+
+      return () => {
+        clearTimeout(timer);
+        setReservationExpiryTimer(null);
+      };
+    }
+  }, [reservationExpired, reservation]);
 
   const fetchDrops = async () => {
     try {
@@ -135,43 +167,127 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-4xl mx-auto mb-4 flex justify-between items-center">
-        <div
-          className={`px-2 py-1 rounded text-sm font-medium ${
-            socketConnected
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {socketConnected ? "🟢 Connected" : "🔴 Disconnected"}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Real-time Inventory System
+            </h1>
+            <div
+              className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${
+                socketConnected
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {socketConnected ? (
+                <>
+                  <CheckCircleSolid className="w-4 h-4" />
+                  Connected
+                </>
+              ) : (
+                <>
+                  <FingerprintXmarkCircle className="w-4 h-4" />
+                  Disconnected
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-      <h1 className="text-3xl font-bold text-center mb-8">
-        Real-time Inventory System
-      </h1>
+      </header>
 
-      <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Reservation Section - Prominently displayed at top when active */}
+        {reservation && (
+          <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <ZSquare className="w-6 h-6" />
+                  Active Reservation
+                </h2>
+                <p className="text-gray-700 mb-1">
+                  <span className="font-semibold">Item:</span> {reservation.drop?.name}
+                </p>
+                <p className="text-lg font-bold text-red-600 flex items-center gap-2">
+                  <TimerSolid className="w-5 h-5" />
+                  Time remaining: {countdown}
+                </p>
+              </div>
+              <div className="flex flex-col items-end space-y-3">
+                <button
+                  onClick={handlePurchase}
+                  disabled={loadingStates.purchase || reservationExpired}
+                  className={`px-8 py-3 rounded-lg font-bold text-white text-lg transition-all duration-200 transform flex items-center gap-2 ${
+                    loadingStates.purchase || reservationExpired
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700 hover:scale-105 shadow-lg hover:shadow-xl"
+                  }`}
+                >
+                  {loadingStates.purchase ? (
+                    <>
+                      <RefreshCircle className="w-5 h-5" />
+                      Purchasing...
+                    </>
+                  ) : reservationExpired ? (
+                    <>
+                      <XmarkCircleSolid className="w-5 h-5" />
+                      Expired
+                    </>
+                  ) : (
+                    <>
+                      <CreditCardSolid className="w-5 h-5" />
+                      Purchase Now
+                    </>
+                  )}
+                </button>
+                {reservationExpired && (
+                  <p className="text-sm text-red-600 font-medium">
+                    Reservation has expired
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Items Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {drops.map((drop) => (
-            <div key={drop.id} className="bg-white rounded-lg shadow-md p-4">
-              <h2 className="text-xl font-semibold mb-2">{drop.name}</h2>
-              <p className="text-gray-600 mb-2">Price: ${drop.price}</p>
-              <p className="text-lg font-bold text-green-600 mb-2">
-                Available Stock: {drop.availableStock}/{drop.totalStock}
-              </p>
+            <div key={drop.id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 border border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{drop.name}</h3>
+              <p className="text-gray-600 mb-3">Price: <span className="font-semibold text-lg">${drop.price}</span></p>
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">Available Stock:</span>
+                  <span className={`text-lg font-bold ${
+                    drop.availableStock > 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {drop.availableStock}/{drop.totalStock}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(drop.availableStock / drop.totalStock) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
 
               {/* Activity Feed */}
               {drop.recentPurchases && drop.recentPurchases.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <ShoppingBagCheck className="w-4 h-4" />
                     Recent Purchases:
-                  </h3>
-                  <ul className="text-sm text-gray-600 space-y-1">
+                  </h4>
+                  <ul className="text-sm text-gray-600 space-y-1 max-h-20 overflow-y-auto">
                     {drop.recentPurchases.slice(0, 3).map((purchase, index) => (
-                      <li key={index} className="flex justify-between">
-                        <span>{purchase.username}</span>
-                        <span>
+                      <li key={index} className="flex justify-between text-xs">
+                        <span className="font-medium">{purchase.username}</span>
+                        <span className="text-gray-500">
                           {new Date(purchase.timestamp).toLocaleTimeString()}
                         </span>
                       </li>
@@ -184,57 +300,49 @@ const App = () => {
                 <button
                   onClick={() => handleReserve(drop.id)}
                   disabled={loadingStates[`reserve-${drop.id}`]}
-                  className={`w-full py-2 px-4 rounded font-bold text-white ${
+                  className={`w-full py-3 px-4 rounded-lg font-bold text-white transition-all duration-200 transform flex items-center justify-center gap-2 ${
                     loadingStates[`reserve-${drop.id}`]
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-blue-500 hover:bg-blue-700"
+                      : "bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-md hover:shadow-lg"
                   }`}
                 >
-                  {loadingStates[`reserve-${drop.id}`]
-                    ? "Reserving..."
-                    : "Reserve"}
+                  {loadingStates[`reserve-${drop.id}`] ? (
+                    <>
+                      <ShieldLoading className="w-5 h-5" />
+                      Reserving...
+                    </>
+                  ) : (
+                    <>
+                      <TriangleFlagTwoStripes className="w-5 h-5" />
+                      Reserve
+                    </>
+                  )}
                 </button>
               )}
             </div>
           ))}
         </div>
 
-        {reservation && (
-          <div className="mt-8 bg-white rounded-lg shadow-md p-4">
-            <h2 className="text-xl font-semibold mb-4">Your Reservation</h2>
-            <p>Drop: {reservation.drop?.name}</p>
-            <p className="text-red-600 font-bold">
-              Time remaining: {countdown}
-            </p>
-            <button
-              onClick={handlePurchase}
-              disabled={loadingStates.purchase || reservationExpired}
-              className={`mt-4 py-2 px-4 rounded font-bold text-white ${
-                loadingStates.purchase || reservationExpired
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-green-500 hover:bg-green-700"
-              }`}
-            >
-              {loadingStates.purchase
-                ? "Purchasing..."
-                : reservationExpired
-                ? "Reservation Expired"
-                : "Purchase Now"}
-            </button>
-          </div>
-        )}
-
-        {/* Toast Notification */}
-        {toast && (
-          <div
-            className={`fixed top-4 right-4 px-4 py-2 rounded shadow-lg text-white z-50 ${
-              toast.type === "error" ? "bg-red-500" : "bg-green-500"
-            }`}
-          >
-            {toast.message}
+        {/* Empty State */}
+        {drops.length === 0 && (
+          <div className="text-center py-12">
+            <Packages className="w-24 h-24 mx-auto mb-4 text-gray-400" />
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No items available</h3>
+            <p className="text-gray-500">Check back later for new inventory drops!</p>
           </div>
         )}
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-6 right-6 px-6 py-3 rounded-lg shadow-xl text-white z-50 text-sm font-medium ${
+            toast.type === "error" ? "bg-red-500" : "bg-green-500"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 };
