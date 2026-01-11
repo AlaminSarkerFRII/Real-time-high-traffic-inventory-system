@@ -26,6 +26,7 @@ const socket = io(BACKEND_URL, {
 
 const App = () => {
   const [drops, setDrops] = useState([]);
+  const [users, setUsers] = useState([]);
   const [userId, setUserId] = useState(null)
   const [selectedDrop, setSelectedDrop] = useState(null);
   const [reservation, setReservation] = useState(null);
@@ -40,6 +41,7 @@ const App = () => {
   useEffect(() => {
     initializeUser();
     fetchDrops();
+    fetchUsers();
     socket.on("connect", () => {
       console.log("Connected to server");
       setSocketConnected(true);
@@ -134,6 +136,15 @@ const App = () => {
       setDrops(res.data);
     } catch (error) {
       console.error("Error fetching drops:", error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get("/api/users");
+      setUsers(res.data.users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
     }
   };
 
