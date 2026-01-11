@@ -203,6 +203,19 @@ const App = () => {
               Real-time Inventory System
             </h1>
             <div className="flex items-center gap-4">
+              <select
+                value={userId || ""}
+                onChange={(e) => setUserId(parseInt(e.target.value))}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                title="Select User"
+              >
+                <option value="">Select User</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.username} (ID: {user.id})
+                  </option>
+                ))}
+              </select>
               <button
                 onClick={() => setShowCreateDropModal(true)}
                 className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
