@@ -147,6 +147,30 @@ curl -X POST https://real-time-high-traffic-inventory-system-production.up.railw
   -d '{"username": "demo_user"}'
 ```
 
+**Request Body:**
+```json
+{
+  "username": "string (required, unique)"
+}
+```
+
+**Success Response (201):**
+```json
+{
+  "user": {
+    "id": 1,
+    "username": "demo_user"
+  }
+}
+```
+
+**Error Response (400):**
+```json
+{
+  "error": "Username is required"
+}
+```
+
 ## Real-Time Events (WebSocket)
 
 The application uses Socket.io for real-time updates. Connect to:
