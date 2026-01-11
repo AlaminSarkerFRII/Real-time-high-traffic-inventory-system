@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { io } from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CreateDrop from "./CreateDrop";
+import api, { BACKEND_URL } from "./config/api";
 import {
   ShieldLoading,
   TriangleFlagTwoStripes,
@@ -19,7 +19,10 @@ import {
   Plus,
 } from "iconoir-react";
 
-const socket = io(window.location.origin);
+// Initialize Socket.io connection using backend URL from environment
+const socket = io(BACKEND_URL, {
+  transports: ["websocket", "polling"],
+});
 
 const App = () => {
   const [drops, setDrops] = useState([]);
@@ -109,7 +112,7 @@ const App = () => {
   const initializeUser = async () => {
     try {
       // Try to create the demo user (it will fail if it already exists, but that's fine)
-      const res = await axios.post("/api/users", { username: "demo_user" });
+      const res = await api.post("/api/users", { username: "demo_user" });
       setUserId(res.data.user.id);
       console.log("Demo user created with ID:", res.data.user.id);
     } catch (error) {
@@ -127,7 +130,7 @@ const App = () => {
 
   const fetchDrops = async () => {
     try {
-      const res = await axios.get("/api/drops");
+      const res = await api.get("/api/drops");
       setDrops(res.data);
     } catch (error) {
       console.error("Error fetching drops:", error);
@@ -153,7 +156,7 @@ const App = () => {
   const handleReserve = async (dropId) => {
     setLoading(`reserve-${dropId}`, true);
     try {
-      const res = await axios.post(`/api/reserve/${dropId}`, { userId });
+      const res = await api.post(`/api/reserve/${dropId}`, { userId });
       setReservation(res.data.reservation);
       setReservationExpired(false); // Reset expired state for new reservation
       setCountdown(null); // Reset countdown
@@ -170,7 +173,7 @@ const App = () => {
     if (!reservation || reservationExpired) return;
     setLoading("purchase", true);
     try {
-      const res = await axios.post(`/api/purchase/${reservation.id}`, {
+      const res = await api.post(`/api/purchase/${reservation.id}`, {
         userId,
       });
       toast.success("Purchase successful!");

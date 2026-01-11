@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { toast } from "react-toastify";
+import api from "./config/api";
 import {
   X,
   Packages,
@@ -30,7 +30,7 @@ const CreateDrop = ({ isOpen, onClose, onDropCreated }) => {
 
   const fetchExistingDrops = async () => {
     try {
-      const res = await axios.get("/api/drops");
+      const res = await api.get("/api/drops");
       setExistingDrops(res.data);
     } catch (error) {
       console.error("Error fetching drops:", error);
@@ -71,7 +71,7 @@ const CreateDrop = ({ isOpen, onClose, onDropCreated }) => {
         dropStartTime: formData.dropStartTime ? new Date(formData.dropStartTime).toISOString() : undefined,
       };
 
-      const res = await axios.post("/api/drops", payload);
+      const res = await api.post("/api/drops", payload);
 
       toast.success("Drop created successfully!");
 
