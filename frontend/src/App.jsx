@@ -26,7 +26,7 @@ const socket = io(BACKEND_URL, {
 
 const App = () => {
   const [drops, setDrops] = useState([]);
-  const [userId, setUserId] = useState(null); // Will be set after user creation/fetch
+  const [userId, setUserId] = useState(null)
   const [selectedDrop, setSelectedDrop] = useState(null);
   const [reservation, setReservation] = useState(null);
   const [loadingStates, setLoadingStates] = useState({});

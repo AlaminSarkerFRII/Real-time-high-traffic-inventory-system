@@ -14,17 +14,10 @@ function initializeSocket(server) {
   io.on("connection", (socket) => {
     console.log(`Client connected: ${socket.id}`);
 
-    // Send initial stock data to new clients
     socket.emit("connected", { message: "Connected to inventory system" });
 
     socket.on("disconnect", () => {
       console.log(`Client disconnected: ${socket.id}`);
-    });
-
-    // Optional: Allow clients to request current stock
-    socket.on("getStock", async (dropId) => {
-      // This could be implemented to send current stock for a specific drop
-      // For now, clients should get stock updates via the dashboard API
     });
   });
 

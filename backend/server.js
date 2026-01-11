@@ -45,9 +45,9 @@ const io = initializeSocket(server);
     // Start the expiration service
     startExpirationService(io);
 
-    server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    server.listen(PORT, () => console.log(`Backend Server running on port ${PORT}`));
   } catch (error) {
-    console.error(" Connection error:", error);
+    console.error("Backend Server Connection error:", error);
     console.log(
       " Make sure your Neon database credentials are correct and the database exists"
     );

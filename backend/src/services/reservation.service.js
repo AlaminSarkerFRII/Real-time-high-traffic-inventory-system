@@ -5,10 +5,10 @@ async function reserveDrop({ userId, dropId }, io) {
   const transaction = await sequelize.transaction();
 
   try {
-    // 1 Lock the drop row
+    // Lock the drop row
     const drop = await Drop.findOne({
       where: { id: dropId },
-      lock: transaction.LOCK.UPDATE, // FOR UPDATE
+      lock: transaction.LOCK.UPDATE,
       transaction,
     });
 
@@ -16,16 +16,16 @@ async function reserveDrop({ userId, dropId }, io) {
       throw new Error("Drop not found");
     }
 
-    // 2 Check stock
+    // Check stock
     if (drop.available_stock <= 0) {
       throw new Error("Out of stock");
     }
 
-    // 3 Decrease stock
+    // Decrease stock
     drop.available_stock -= 1;
     await drop.save({ transaction });
 
-    // 4 Create reservation
+    // Create reservation
     const expiresAt = new Date(Date.now() + 60 * 1000);
 
     const reservation = await Reservation.create(
@@ -38,12 +38,12 @@ async function reserveDrop({ userId, dropId }, io) {
       { transaction }
     );
 
-    // 5 Commit transaction
+    // Commit transaction
     await transaction.commit();
 
     console.log(`Reservation created: User ${userId} reserved from drop ${dropId}, stock now: ${drop.available_stock}`);
 
-    // 6 Broadcast stock update to all connected clients
+    // Broadcast stock update to all connected clients
     if (io) {
       io.emit("stockUpdate", {
         dropId: dropId,

@@ -48,7 +48,6 @@ const CreateDrop = ({ isOpen, onClose, onDropCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.name.trim()) {
       toast.error("Drop name is required");
       return;

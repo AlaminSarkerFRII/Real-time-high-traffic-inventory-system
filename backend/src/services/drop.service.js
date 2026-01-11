@@ -10,8 +10,8 @@ async function createDrop({ name, price, totalStock, dropStartTime }) {
         name,
         price,
         total_stock: totalStock,
-        available_stock: totalStock, // Initially all stock is available
-        drop_start_time: dropStartTime || new Date(), // Default to now if not provided
+        available_stock: totalStock,
+        drop_start_time: dropStartTime || new Date(),
       },
       { transaction }
     );
@@ -29,10 +29,10 @@ async function getActiveDrops() {
     const drops = await Drop.findAll({
       where: {
         drop_start_time: {
-          [Op.lte]: new Date(), // Drop has started
+          [Op.lte]: new Date(),
         },
         available_stock: {
-          [Op.gt]: 0, // Has available stock
+          [Op.gt]: 0,
         },
       },
       include: [
@@ -46,7 +46,6 @@ async function getActiveDrops() {
       order: [["drop_start_time", "DESC"]],
     });
 
-    // Format the response with activity feed
     const formattedDrops = drops.map((drop) => ({
       id: drop.id,
       name: drop.name,
