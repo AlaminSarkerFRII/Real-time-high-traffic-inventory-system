@@ -123,6 +123,23 @@ curl -X POST https://real-time-high-traffic-inventory-system-production.up.railw
 }
 ```
 
+### Get All Users
+```bash
+curl https://real-time-high-traffic-inventory-system-production.up.railway.app/api/users
+```
+
+**Response:**
+```json
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "demo_user"
+    }
+  ]
+}
+```
+
 ### Create User
 ```bash
 curl -X POST https://real-time-high-traffic-inventory-system-production.up.railway.app/api/users \
