@@ -40,6 +40,16 @@ app.post("/api/users", async (req, res) => {
   }
 });
 
+// Get all users
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.json({ users });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Inventory system is running" });
